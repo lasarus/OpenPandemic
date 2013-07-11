@@ -35,13 +35,6 @@ static void init_landmass_buffer(landmass_t * landmass)
 	  triangles[c].v[0] = spherical_coord(s_v[0], landmass_radius);
 	  triangles[c].v[1] = spherical_coord(s_v[1], landmass_radius);
 	  triangles[c].v[2] = spherical_coord(s_v[2], landmass_radius);
-	  printf("added triangle\nvertex1:%.3f %.3f\nconverted:%.3f %.3f %.3f\n",
-		 s_v[0].sector,
-		 s_v[0].ring,
-
-		 triangles[c].v[0].x,
-		 triangles[c].v[0].y,
-		 triangles[c].v[0].z);
 	  c++;
 	}
     }

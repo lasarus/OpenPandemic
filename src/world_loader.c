@@ -7,12 +7,12 @@
 
 enum
   {
-    TOKEN_LBRACKET = 0,
-    TOKEN_RBRACKET = 1,
-    TOKEN_SPACE = 2,
-    TOKEN_FLOAT = 3,
-    TOKEN_UNKNOWN = 4,
-    TOKEN_EOF = 5
+    TOKEN_LBRACKET,
+    TOKEN_RBRACKET,
+    TOKEN_SPACE,
+    TOKEN_FLOAT,
+    TOKEN_UNKNOWN,
+    TOKEN_EOF
   };
 
 union
@@ -89,13 +89,11 @@ static int read_token(FILE * file)
 
 	  if(matches_float(buffer))
 	    {
-	      printf("found token! \"%s\"\n", buffer);
 	      token_data.f = atof(buffer);
 	      return TOKEN_FLOAT;
 	    }
 	  else if(matches_single_char(buffer))
 	    {
-	      printf("found token! \"%s\"\n", buffer);
 	      if(buffer[0] == ' ')
 		return TOKEN_SPACE;
 	      else if(buffer[0] == '{')
@@ -201,10 +199,6 @@ void load_landmass(landmass_t * landmass, FILE * file)
 	    }
 	  else if(token == TOKEN_RBRACKET)
 	    {
-	      s_vertex_t * vertex;
-
-	      vertex = &landmass->countries[current_country].triangles[current_triangle].v[current_vertex];
-	      printf("new vertex added %.4f %.4f - %i %i %i\n", vertex->sector, vertex->ring, current_country, current_triangle, current_vertex);
 	      stage--;
 	      current_vertex++;
 	    }
@@ -212,6 +206,4 @@ void load_landmass(landmass_t * landmass, FILE * file)
 	    continue;
 	}
     }
-
-  printf("country count: %i\n", landmass->count);
 }
