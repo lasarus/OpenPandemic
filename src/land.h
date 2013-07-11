@@ -1,13 +1,19 @@
 #ifndef LAND_H
 #define LAND_H
 
+typedef struct c_triangle
+{
+  vertex_t color;
+  s_vertex_t v[3];
+} c_triangle_t;
+
 typedef struct country
 {
   char * name;
   int population;
 
   int count;
-  s_triangle_t * triangles;
+  c_triangle_t * triangles;
 } country_t;
 
 typedef struct landmass

@@ -168,6 +168,52 @@ static int read_token(FILE * file)
     }
 }
 
+static void read_color(FILE * file, float * r, float * g, float * b)
+{
+  int token;
+  int stage = 0;
+
+  /* STAGE 0: search for color array */
+  /* STAGE 1: read color array floats */
+  int current_color = 0;
+
+  while(1)
+    {
+      token = read_token(file);
+
+      if(token == TOKEN_EOF)
+	return;
+
+      if(stage == 0)
+	{
+	  if(token == TOKEN_LBRACKET)
+	    {
+	      stage = 1;
+	    }
+	}
+      else if(stage == 1)
+	{
+	  if(token == TOKEN_FLOAT)
+	    {
+	      float * c = NULL;
+	      switch(current_color)
+		{
+		case 0: c = r; break;
+		case 1: c = g; break;
+		case 2: c = b; break;
+		}
+
+	      *c = token_data.f;
+	      current_color++;
+	    }
+	  else if(token == TOKEN_RBRACKET)
+	    {
+	      break;
+	    }
+	}
+    }
+}
+
 void load_landmass(landmass_t * landmass, FILE * file)
 {
   int token;
@@ -181,6 +227,8 @@ void load_landmass(landmass_t * landmass, FILE * file)
   int current_triangle = 0;
   int current_vertex = 0;
   int current_pair = 0;
+
+  float c_r = 0, c_g = 1, c_b = 0;
 
   landmass->count = 0;
   landmass->countries = NULL;
@@ -198,6 +246,10 @@ void load_landmass(landmass_t * landmass, FILE * file)
 	    {
 	      stage++;
 	      current_triangle = 0;
+
+	      c_r = 0;
+	      c_g = 1;
+	      c_b = 0;
 
 	      landmass->count++;
 	      landmass->countries = realloc(landmass->countries,
@@ -221,9 +273,12 @@ void load_landmass(landmass_t * landmass, FILE * file)
 	      landmass->countries[current_country].count++;
       
 	      landmass->countries[current_country].triangles =
-		realloc(landmass->countries[current_country].triangles, sizeof(s_triangle_t) * landmass->countries[current_country].count);
+		realloc(landmass->countries[current_country].triangles, sizeof(c_triangle_t) * landmass->countries[current_country].count);
 
 	      current_vertex = 0;
+	      landmass->countries[current_country].triangles[current_triangle].color.x = c_r;
+	      landmass->countries[current_country].triangles[current_triangle].color.y = c_g;
+	      landmass->countries[current_country].triangles[current_triangle].color.z = c_b;
 	    }
 	  else if(token == TOKEN_TYPE)
 	    {
@@ -245,6 +300,15 @@ void load_landmass(landmass_t * landmass, FILE * file)
 		      landmass->countries[current_country].population = (int)token_data.f;
 		      printf("Population: %i\n", (int)token_data.f);
 		    }
+		}
+	      else if(strcmp(str, "color") == 0)
+		{
+		  float r, g, b;
+		  read_color(file, &r, &g, &b);
+
+		  c_r = r;
+		  c_g = g;
+		  c_b = b;
 		}
 	      free(str);
 	    }
