@@ -11,6 +11,8 @@ enum
     TOKEN_RBRACKET,
     TOKEN_SPACE,
     TOKEN_FLOAT,
+    TOKEN_TYPE,
+    TOKEN_STRING,
     TOKEN_UNKNOWN,
     TOKEN_EOF
   };
@@ -18,6 +20,7 @@ enum
 union
 {
   float f;
+  char * str;
 } token_data;
 
 static int matches_float(char * str)
@@ -51,6 +54,54 @@ static int matches_float(char * str)
   return 1;
 }
 
+static int matches_string_start(char * str)
+{
+  if(*str != '\"')
+    return 0;
+  str++;
+
+  while(*str != 0)
+    {
+      if(*str == '\"' && *(str + 1) != 0)
+	return 0;
+      str++;
+    }
+
+  return 1;
+}
+
+static int matches_string(char * str)
+{
+  if(*str != '\"' || str[strlen(str) - 1] != '\"')
+    return 0;
+  return 1;
+}
+
+static int matches_type_start(char * str)
+{
+  if(*str != ':')
+    return 0;
+
+  str++;
+
+  while(*str != 0)
+    {
+      if(*str == ':' && *(str + 1) != 0)
+	return 0;
+      str++;
+    }
+
+  return 1;
+}
+
+static int matches_type(char * str)
+{
+  if(*str != ':' || str[strlen(str) - 1] != ':')
+    return 0;
+  return 1;
+}
+
+
 static int matches_single_char(char * str)
 {
   if(str[1] != 0)
@@ -80,7 +131,7 @@ static int read_token(FILE * file)
       buffer[len] = c;
       buffer[len + 1] = 0;
 
-      if((!matches_float(buffer) && !matches_single_char(buffer)) ||
+      if((!matches_float(buffer) && !matches_single_char(buffer) && !matches_string_start(buffer) && !matches_type_start(buffer)) || 
 	 c == EOF)
 	{
 	  buffer[len] = 0;
@@ -100,6 +151,16 @@ static int read_token(FILE * file)
 		return TOKEN_LBRACKET;
 	      else if(buffer[0] == '}')
 		return TOKEN_RBRACKET;
+	    }
+	  else if(matches_string(buffer))
+	    {
+	      token_data.str = strndup(buffer + 1, strlen(buffer) - 2);
+	      return TOKEN_STRING;
+	    }
+	  else if(matches_type(buffer))
+	    {
+	      token_data.str = strndup(buffer + 1, strlen(buffer) - 2);
+	      return TOKEN_TYPE;
 	    }
 	  else
 	    return TOKEN_UNKNOWN;
@@ -163,6 +224,29 @@ void load_landmass(landmass_t * landmass, FILE * file)
 		realloc(landmass->countries[current_country].triangles, sizeof(s_triangle_t) * landmass->countries[current_country].count);
 
 	      current_vertex = 0;
+	    }
+	  else if(token == TOKEN_TYPE)
+	    {
+	      char * str = token_data.str;
+	      if(strcmp(str, "name") == 0)
+		{
+		  int ntoken = read_token(file);
+		  if(ntoken == TOKEN_STRING)
+		    {
+		      landmass->countries[current_country].name = token_data.str;
+		      printf("Name: %s\n", token_data.str);
+		    }
+		}
+	      else if(strcmp(str, "population") == 0)
+		{
+		  int ntoken = read_token(file);
+		  if(ntoken == TOKEN_FLOAT)
+		    {
+		      landmass->countries[current_country].population = (int)token_data.f;
+		      printf("Population: %i\n", (int)token_data.f);
+		    }
+		}
+	      free(str);
 	    }
 	  else if(token == TOKEN_RBRACKET)
 	    {

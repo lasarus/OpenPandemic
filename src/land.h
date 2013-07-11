@@ -3,6 +3,9 @@
 
 typedef struct country
 {
+  char * name;
+  int population;
+
   int count;
   s_triangle_t * triangles;
 } country_t;
