@@ -5,9 +5,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <float.h>
 
 #include "vertex.h"
 #include "land.h"
+#include "world_loader.h"
 
 #ifndef PI
 #define PI 3.14159265358979
@@ -136,6 +138,17 @@ void draw_sphere()
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+void load_world(const char * filename, landmass_t * landmass)
+{
+  FILE * fp;
+  fp = fopen(filename, "r");
+
+  load_landmass(landmass, fp);
+  init_landmass(landmass);
+
+  fclose(fp);
+}
+
 int main(int argc, char ** argv)
 {
   landmass_t landmass;
@@ -145,7 +158,8 @@ int main(int argc, char ** argv)
     return 1;
 
   init_sphere();
-  init_landmass(&landmass);
+
+  load_world("world.opw", &landmass);
 
   srand(time(NULL));
 
@@ -168,15 +182,15 @@ int main(int argc, char ** argv)
 	{
 	  vangl += 0.001 * dtime;
 
-	  if(vangl > PI / 2 - 0.1)
-	    vangl = PI / 2 - 0.1;
+	  if(vangl > PI / 2 - FLT_MIN)
+	    vangl = PI / 2 - FLT_MIN;
 	}
       else if(keystate[SDL_GetScancodeFromKey(SDLK_s)])
 	{
 	  vangl -= 0.001 * dtime;
 
-	  if(vangl < -PI / 2 + 0.1)
-	    vangl = -PI / 2 + 0.1;
+	  if(vangl < -PI / 2 + FLT_MIN)
+	    vangl = -PI / 2 + FLT_MIN;
 	}
       if(keystate[SDL_GetScancodeFromKey(SDLK_a)])
 	hangl += 0.001 * dtime;

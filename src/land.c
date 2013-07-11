@@ -57,20 +57,6 @@ static void init_landmass_buffer(landmass_t * landmass)
 
 void init_landmass(landmass_t * landmass)
 {
-  landmass->count = 1;
-  landmass->countries = malloc(sizeof(country_t) * landmass->count);
-
-  landmass->countries[0].count = 1;
-  landmass->countries[0].triangles = malloc(sizeof(s_triangle_t) * 1);
-  landmass->countries[0].triangles[0].v[0].sector = -0.01;
-  landmass->countries[0].triangles[0].v[0].ring = -0.01;
-
-  landmass->countries[0].triangles[0].v[1].sector = 0.01;
-  landmass->countries[0].triangles[0].v[1].ring = -0.01;
-
-  landmass->countries[0].triangles[0].v[2].sector = 0;
-  landmass->countries[0].triangles[0].v[2].ring = 0.01;
-
   init_landmass_buffer(landmass);
 }
 
