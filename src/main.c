@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "vertex.h"
+#include "land.h"
+
 #ifndef PI
 #define PI 3.14159265358979
 #endif
@@ -27,7 +30,7 @@ int init_opengl()
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_DEPTH_TEST);
 
-  glClearColor(0, 0, 1, 1);
+  glClearColor(0, 0, 0, 1);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -46,7 +49,7 @@ int init()
   if(SDL_Init(SDL_INIT_EVERYTHING) == -1)
     return 1;
   
-  window = SDL_CreateWindow("Test", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screen_width, screen_height, SDL_WINDOW_OPENGL);
+  window = SDL_CreateWindow("OpenPandemic 0.x", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screen_width, screen_height, SDL_WINDOW_OPENGL);
 
   if(window == NULL)
     return 0;
@@ -67,13 +70,9 @@ void update_time(Uint32 * ntime, Uint32 * ltime, Uint32 * dtime)
 }
 
 GLuint sphere_buffer = 0;
-typedef struct vertex
-{
-  float x, y, z;
-} vertex_t;
 
-const int sphere_rings = 50;
-const int sphere_sectors = 50;
+const int sphere_rings = 20;
+const int sphere_sectors = 20;
 
 void init_sphere()
 {
@@ -139,12 +138,14 @@ void draw_sphere()
 
 int main(int argc, char ** argv)
 {
+  landmass_t landmass;
   Uint32 ntime, ltime = 0, dtime;
   double vangl = 0, hangl = 0, dist = 4;
   if(init())
     return 1;
 
   init_sphere();
+  init_landmass(&landmass);
 
   srand(time(NULL));
 
@@ -174,8 +175,8 @@ int main(int argc, char ** argv)
 	{
 	  vangl -= 0.001 * dtime;
 
-	  if(vangl < 0.1)
-	    vangl = 0.1;
+	  if(vangl < -PI / 2 + 0.1)
+	    vangl = -PI / 2 + 0.1;
 	}
       if(keystate[SDL_GetScancodeFromKey(SDLK_a)])
 	hangl += 0.001 * dtime;
@@ -193,8 +194,11 @@ int main(int argc, char ** argv)
 		0, 0, 0,
 		0, 0, 1);
 
-      glColor3f(0, 1, 0);
+      glColor3f(0, 0, 1);
       draw_sphere();
+
+      glColor3f(0, 1, 0);
+      draw_landmass(&landmass);
 
       SDL_GL_SwapWindow(window);
     }
