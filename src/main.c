@@ -72,21 +72,16 @@ typedef struct vertex
   float x, y, z;
 } vertex_t;
 
-typedef struct rect
-{
-  vertex_t v[4];
-} rect_t;
-
 const int sphere_rings = 50;
 const int sphere_sectors = 50;
 
 void init_sphere()
 {
-  rect_t * sphere;
+  vertex_t * sphere;
   int i, j;
 
-  sphere = malloc(sizeof(rect_t) * sphere_rings
-		  * sphere_sectors);
+  sphere = malloc(sizeof(vertex_t) * sphere_rings
+		  * sphere_sectors * 4);
 
   for(i = 0; i < sphere_sectors; i++)
     {
@@ -101,21 +96,21 @@ void init_sphere()
 	  ring_angl = (j / (double)sphere_rings - 0.5) * PI;
 	  prev_ring_angl = ((j - 1) / (double)sphere_rings - 0.5) * PI;
 
-	  sphere[(j - 1) + i * sphere_rings].v[0].x = cos(prev_sector_angl) * cos(prev_ring_angl);
-	  sphere[(j - 1) + i * sphere_rings].v[0].y = -sin(prev_sector_angl) * cos(prev_ring_angl);
-	  sphere[(j - 1) + i * sphere_rings].v[0].z = sin(prev_ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 0].x = cos(prev_sector_angl) * cos(prev_ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 0].y = -sin(prev_sector_angl) * cos(prev_ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 0].z = sin(prev_ring_angl);
 
-	  sphere[(j - 1) + i * sphere_rings].v[1].x = cos(prev_sector_angl) * cos(ring_angl);
-	  sphere[(j - 1) + i * sphere_rings].v[1].y = -sin(prev_sector_angl) * cos(ring_angl);
-	  sphere[(j - 1) + i * sphere_rings].v[1].z = sin(ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 1].x = cos(prev_sector_angl) * cos(ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 1].y = -sin(prev_sector_angl) * cos(ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 1].z = sin(ring_angl);
 
-	  sphere[(j - 1) + i * sphere_rings].v[2].x = cos(sector_angl) * cos(ring_angl);
-	  sphere[(j - 1) + i * sphere_rings].v[2].y = -sin(sector_angl) * cos(ring_angl);
-	  sphere[(j - 1) + i * sphere_rings].v[2].z = sin(ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 2].x = cos(sector_angl) * cos(ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 2].y = -sin(sector_angl) * cos(ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 2].z = sin(ring_angl);
 
-	  sphere[(j - 1) + i * sphere_rings].v[3].x = cos(sector_angl) * cos(prev_ring_angl);
-	  sphere[(j - 1) + i * sphere_rings].v[3].y = -sin(sector_angl) * cos(prev_ring_angl);
-	  sphere[(j - 1) + i * sphere_rings].v[3].z = sin(prev_ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 3].x = cos(sector_angl) * cos(prev_ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 3].y = -sin(sector_angl) * cos(prev_ring_angl);
+	  sphere[((j - 1) + i * sphere_rings) * 4 + 3].z = sin(prev_ring_angl);
 	}
     }
 
@@ -123,7 +118,7 @@ void init_sphere()
 
   glBindBuffer(GL_ARRAY_BUFFER, sphere_buffer);
   glBufferData(GL_ARRAY_BUFFER,
-	       sizeof(rect_t) * sphere_rings* sphere_sectors,
+	       sizeof(vertex_t) * sphere_rings * sphere_sectors * 4,
 	       sphere, GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
