@@ -36,7 +36,7 @@ int init_opengl()
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(45.0f, (GLfloat)screen_width / (GLfloat)screen_height, 0.1f, 100.0f);
+  gluPerspective(45.0f, (GLfloat)screen_width / (GLfloat)screen_height, 0.01f, 100.0f);
 
   glMatrixMode(GL_MODELVIEW);
 
@@ -180,26 +180,34 @@ int main(int argc, char ** argv)
 
       if(keystate[SDL_GetScancodeFromKey(SDLK_w)])
 	{
-	  vangl += 0.001 * dtime;
+	  vangl += 0.001 * dtime * sqrt(dist - 1.08);
 
 	  if(vangl > PI / 2 - FLT_MIN)
 	    vangl = PI / 2 - FLT_MIN;
 	}
       else if(keystate[SDL_GetScancodeFromKey(SDLK_s)])
 	{
-	  vangl -= 0.001 * dtime;
+	  vangl -= 0.001 * dtime * sqrt(dist - 1.08);
 
 	  if(vangl < -PI / 2 + FLT_MIN)
 	    vangl = -PI / 2 + FLT_MIN;
 	}
       if(keystate[SDL_GetScancodeFromKey(SDLK_a)])
-	hangl += 0.001 * dtime;
+	hangl += 0.001 * dtime * sqrt(dist - 1.08);
       else if(keystate[SDL_GetScancodeFromKey(SDLK_d)])
-	hangl -= 0.001 * dtime;
+	hangl -= 0.001 * dtime * sqrt(dist - 1.08);
       if(keystate[SDL_GetScancodeFromKey(SDLK_q)])
-	dist += 0.01 * dtime;
+	{
+	  dist -= (dist - 1.08) / 400 * dtime;
+	  if(dist < 1.1)
+	    dist = 1.1;
+	}
       else if(keystate[SDL_GetScancodeFromKey(SDLK_e)])
-	dist -= 0.01 * dtime;
+	{
+	  dist += (dist - 1) / 400 * dtime;
+	  if(dist > 6)
+	    dist = 6;
+	}
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
