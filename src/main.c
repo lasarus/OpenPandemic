@@ -100,6 +100,7 @@ int main(int argc, char ** argv)
   int mouse_x, mouse_y;
   s_vertex_t mouse_s;
   int wireframe = 0;
+  int last_selected = -1;
 
   if(init())
     return 1;
@@ -115,6 +116,7 @@ int main(int argc, char ** argv)
     {
       const Uint8 * keystate;
       vertex_t cameraLookAt, cameraUp, cameraPosition;
+      int selected;
       while(SDL_PollEvent(&event))
 	{
 	  if(event.type == SDL_QUIT)
@@ -148,6 +150,21 @@ int main(int argc, char ** argv)
       cameraUp = new_vertex(0, 0, 1);
       sphere.r = 1.02;
       mouse_s = s_vertex_from_screen(&sphere, mouse_x, mouse_y, cameraLookAt, cameraPosition, cameraUp, fov, 0.1);
+
+      if((selected = selected_country(&landmass, mouse_s)) > -1)
+	{
+	  if(selected != last_selected)
+	    {
+	      if(last_selected != -1)
+		update_country(&landmass, last_selected, 1, 1, 1, 0);
+	      update_country(&landmass, selected, 1, .5, .5, 0.01);
+	    }
+	}
+      else if(last_selected != -1)
+	{
+	  update_country(&landmass, last_selected, 1, 1, 1, 0);
+	}
+      last_selected = selected;
 
       if(keystate[SDL_GetScancodeFromKey(SDLK_w)])
 	{
@@ -217,7 +234,7 @@ int main(int argc, char ** argv)
 
       glPopMatrix();
 
-      /*  */
+      /* */
       SDL_GL_SwapWindow(window);
     }
 

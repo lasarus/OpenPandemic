@@ -11,6 +11,8 @@ typedef struct country
 {
   char * name;
   int population;
+  
+  int vbo_start;
 
   int count;
   c_triangle_t * triangles;
@@ -24,5 +26,9 @@ typedef struct landmass
 
 void init_landmass(landmass_t * landmass);
 void draw_landmass(landmass_t * landmass);
+
+void update_country(landmass_t * landmass, int i, float r, float g, float b, double h);
+
+int selected_country(landmass_t * landmass, s_vertex_t mouse_s);
 
 #endif
