@@ -23,6 +23,8 @@ SDL_GLContext window_context;
 
 SDL_Event event;
 
+float fov = 45.f;
+
 int init_opengl()
 {
   glewInit();
@@ -36,7 +38,7 @@ int init_opengl()
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(45.0f, (GLfloat)screen_width / (GLfloat)screen_height, 0.01f, 100.0f);
+  gluPerspective(fov, (GLfloat)screen_width / (GLfloat)screen_height, 0.01f, 100.0f);
 
   glMatrixMode(GL_MODELVIEW);
 
@@ -149,6 +151,12 @@ void load_world(const char * filename, landmass_t * landmass)
   fclose(fp);
 }
 
+double camera_dist(float fov_r /* radians */, double sphere_r /* sphere radius */)
+{
+  fov_r /= 2;
+  return sin(PI / 2 - fov_r) / tan(fov_r) + cos(PI / 2 - fov_r);
+}
+
 int main(int argc, char ** argv)
 {
   landmass_t landmass;
@@ -159,7 +167,10 @@ int main(int argc, char ** argv)
 
   init_sphere();
 
+  dist = camera_dist(fov / 180. * PI, 1.2);
   load_world("world.opw", &landmass);
+
+  printf("%f %f\n", dist, 1 / dist);
 
   srand(time(NULL));
 
@@ -171,6 +182,15 @@ int main(int argc, char ** argv)
 	  if(event.type == SDL_QUIT)
 	    {
 	      quit = 1;
+	    }
+	  else if(event.type == SDL_KEYDOWN)
+	    {
+	      SDL_Keycode key = event.key.keysym.sym;
+
+	      if(key == SDLK_r)
+		{
+		  dist = camera_dist(fov / 180. * PI, 1.2);
+		}
 	    }
 	}
 
