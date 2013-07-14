@@ -11,4 +11,6 @@ typedef struct sphere
 void init_sphere(sphere_t * sphere, int rings, int sectors, double r);
 void draw_sphere(sphere_t * sphere);
 
+s_vertex_t s_vertex_from_screen(sphere_t * sphere, int mouse_x, int mouse_y, vertex_t cameraLookAt, vertex_t cameraPosition, vertex_t cameraUp, float fovy, float near_clipping);
+
 #endif

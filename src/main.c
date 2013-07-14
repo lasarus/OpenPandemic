@@ -16,7 +16,7 @@
 #define PI 3.14159265358979
 #endif
  
-int screen_width = 640, screen_height = 480, screen_bpp = 32;
+int screen_width = 640, screen_height = 640, screen_bpp = 32;
 int quit = 0;
 
 SDL_Window * window = NULL;
@@ -97,21 +97,24 @@ int main(int argc, char ** argv)
   sphere_t sphere;
   Uint32 ntime, ltime = 0, dtime;
   double vangl = 0, hangl = 0, dist = 4;
+  int mouse_x, mouse_y;
+  s_vertex_t mouse_s;
+  int wireframe = 0;
+
   if(init())
     return 1;
 
-  init_sphere(&sphere, 20, 20, 1);
+  init_sphere(&sphere, 10, 20, 1);
 
   dist = camera_dist(fov / 180. * PI, 1.2);
   load_world("world.opw", &landmass);
-
-  printf("%f %f\n", dist, 1 / dist);
 
   srand(time(NULL));
 
   while(!quit)
     {
       const Uint8 * keystate;
+      vertex_t cameraLookAt, cameraUp, cameraPosition;
       while(SDL_PollEvent(&event))
 	{
 	  if(event.type == SDL_QUIT)
@@ -126,12 +129,25 @@ int main(int argc, char ** argv)
 		{
 		  dist = camera_dist(fov / 180. * PI, 1.2);
 		}
+	      else if(key == SDLK_1)
+		{
+		  wireframe = !wireframe;
+		}
 	    }
 	}
 
       update_time(&ntime, &ltime, &dtime);
 
       keystate = SDL_GetKeyboardState(NULL);
+      SDL_GetMouseState(&mouse_x, &mouse_y);
+
+      cameraPosition = new_vertex(cos(hangl) * dist * cos(vangl),
+				  -sin(hangl) * dist * cos(vangl),
+				  sin(vangl) * dist);
+      cameraLookAt = new_vertex(0, 0, 0);
+      cameraUp = new_vertex(0, 0, 1);
+      sphere.r = 1.02;
+      mouse_s = s_vertex_from_screen(&sphere, mouse_x, mouse_y, cameraLookAt, cameraPosition, cameraUp, fov, 0.1);
 
       if(keystate[SDL_GetScancodeFromKey(SDLK_w)])
 	{
@@ -167,16 +183,41 @@ int main(int argc, char ** argv)
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       glLoadIdentity();
-      gluLookAt(cos(hangl) * dist * cos(vangl), -sin(hangl) * dist * cos(vangl), sin(vangl) * dist,
-		0, 0, 0,
-		0, 0, 1);
 
+      gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
+		cameraLookAt.x, cameraLookAt.y, cameraLookAt.z,
+		cameraUp.x, cameraUp.y, cameraUp.z);
+
+      if(wireframe)
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
       glColor3f(0, 0, 1);
       draw_sphere(&sphere);
+      if(wireframe)
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
       glColor3f(0, 1, 0);
       draw_landmass(&landmass);
 
+
+      /* draw cursor */
+      glPushMatrix();
+      glColor3f(1, 0, 0);
+      
+      glRotatef(-mouse_s.sector * 180., 0, 0, 1);
+      glRotatef(-mouse_s.ring * 90., 0, 1, 0);
+      glTranslatef(1.02, 0, 0);
+
+      glBegin(GL_TRIANGLES);
+      
+      glVertex3f(0, 0, -0.01);
+      glVertex3f(0, -0.009, 0.01);
+      glVertex3f(0, 0.009, 0.01);
+
+      glEnd();
+
+      glPopMatrix();
+
+      /*  */
       SDL_GL_SwapWindow(window);
     }
 

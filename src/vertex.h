@@ -29,4 +29,13 @@ typedef struct s_triangle
 
 vertex_t spherical_coord(s_vertex_t s_vertex, float radius);
 
+vertex_t new_vertex(double x, double y, double z);
+vertex_t normalize_vector(vertex_t v);
+vertex_t cross_product(vertex_t a, vertex_t b);
+double dot_product(vertex_t a, vertex_t b);
+vertex_t add_vector(vertex_t a, vertex_t b);
+vertex_t subtract_vector(vertex_t a, vertex_t b);
+vertex_t scale_vector(vertex_t v, double scalar);
+double vector_lenght(vertex_t v);
+
 #endif
