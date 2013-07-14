@@ -10,6 +10,7 @@
 #include "vertex.h"
 #include "land.h"
 #include "world_loader.h"
+#include "sphere.h"
 
 #ifndef PI
 #define PI 3.14159265358979
@@ -73,73 +74,6 @@ void update_time(Uint32 * ntime, Uint32 * ltime, Uint32 * dtime)
   *ltime = *ntime;
 }
 
-GLuint sphere_buffer = 0;
-
-const int sphere_rings = 20;
-const int sphere_sectors = 20;
-
-void init_sphere()
-{
-  vertex_t * sphere;
-  int i, j;
-
-  sphere = malloc(sizeof(vertex_t) * sphere_rings
-		  * sphere_sectors * 4);
-
-  for(i = 0; i < sphere_sectors; i++)
-    {
-      double sector_angl, prev_sector_angl;
-
-      sector_angl = (i / (double)sphere_sectors) * PI * 2;
-      prev_sector_angl = ((i - 1) / (double)sphere_sectors) * PI * 2;
-      for(j = 1; j < sphere_rings + 1; j++)
-	{
-	  double ring_angl, prev_ring_angl;
-
-	  ring_angl = (j / (double)sphere_rings - 0.5) * PI;
-	  prev_ring_angl = ((j - 1) / (double)sphere_rings - 0.5) * PI;
-
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 0].x = cos(prev_sector_angl) * cos(prev_ring_angl);
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 0].y = -sin(prev_sector_angl) * cos(prev_ring_angl);
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 0].z = sin(prev_ring_angl);
-
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 1].x = cos(prev_sector_angl) * cos(ring_angl);
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 1].y = -sin(prev_sector_angl) * cos(ring_angl);
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 1].z = sin(ring_angl);
-
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 2].x = cos(sector_angl) * cos(ring_angl);
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 2].y = -sin(sector_angl) * cos(ring_angl);
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 2].z = sin(ring_angl);
-
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 3].x = cos(sector_angl) * cos(prev_ring_angl);
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 3].y = -sin(sector_angl) * cos(prev_ring_angl);
-	  sphere[((j - 1) + i * sphere_rings) * 4 + 3].z = sin(prev_ring_angl);
-	}
-    }
-
-  glGenBuffers(1, &sphere_buffer);
-
-  glBindBuffer(GL_ARRAY_BUFFER, sphere_buffer);
-  glBufferData(GL_ARRAY_BUFFER,
-	       sizeof(vertex_t) * sphere_rings * sphere_sectors * 4,
-	       sphere, GL_STATIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-  free(sphere);
-}
-
-void draw_sphere()
-{
-  glBindBuffer(GL_ARRAY_BUFFER, sphere_buffer);
-  glVertexPointer(3, GL_FLOAT, 0, NULL);  
-  glEnableClientState(GL_VERTEX_ARRAY);
-
-  glDrawArrays(GL_QUADS, 0, sphere_rings * sphere_sectors * 4);
-
-  glDisableClientState(GL_VERTEX_ARRAY);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 void load_world(const char * filename, landmass_t * landmass)
 {
   FILE * fp;
@@ -160,12 +94,13 @@ double camera_dist(float fov_r /* radians */, double sphere_r /* sphere radius *
 int main(int argc, char ** argv)
 {
   landmass_t landmass;
+  sphere_t sphere;
   Uint32 ntime, ltime = 0, dtime;
   double vangl = 0, hangl = 0, dist = 4;
   if(init())
     return 1;
 
-  init_sphere();
+  init_sphere(&sphere, 20, 20, 1);
 
   dist = camera_dist(fov / 180. * PI, 1.2);
   load_world("world.opw", &landmass);
@@ -237,7 +172,7 @@ int main(int argc, char ** argv)
 		0, 0, 1);
 
       glColor3f(0, 0, 1);
-      draw_sphere();
+      draw_sphere(&sphere);
 
       glColor3f(0, 1, 0);
       draw_landmass(&landmass);
