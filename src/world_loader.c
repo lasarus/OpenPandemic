@@ -257,6 +257,8 @@ void load_landmass(landmass_t * landmass, FILE * file)
 	      landmass->countries[landmass->count - 1].count = 0;
 	      landmass->countries[landmass->count - 1].triangles = NULL;
 	      landmass->countries[landmass->count - 1].selectable = 1;
+	      landmass->countries[landmass->count - 1].airport = 0;
+	      landmass->countries[landmass->count - 1].harbor = 0;
 	    }
 	  else if(token == TOKEN_RBRACKET)
 	    {
@@ -317,6 +319,22 @@ void load_landmass(landmass_t * landmass, FILE * file)
 		  if(ntoken == TOKEN_FLOAT)
 		    {
 		      landmass->countries[current_country].selectable = (int)token_data.f;
+		    }
+		}
+	      else if(strcmp(str, "airport") == 0)
+		{
+		  int ntoken = read_token(file);
+		  if(ntoken == TOKEN_FLOAT)
+		    {
+		      landmass->countries[current_country].airport = (int)token_data.f;
+		    }
+		}
+	      else if(strcmp(str, "harbor") == 0)
+		{
+		  int ntoken = read_token(file);
+		  if(ntoken == TOKEN_FLOAT)
+		    {
+		      landmass->countries[current_country].harbor = (int)token_data.f;
 		    }
 		}
 	      free(str);

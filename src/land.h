@@ -13,6 +13,8 @@ typedef struct country
   int population;
   int selectable;
 
+  int harbor, airport;
+
   int vbo_start;
 
   int count;
