@@ -16,7 +16,7 @@
 #define PI 3.14159265358979
 #endif
  
-int screen_width = 640, screen_height = 640, screen_bpp = 32;
+int screen_width = 640, screen_height = 480, screen_bpp = 32;
 int quit = 0;
 
 SDL_Window * window = NULL;
