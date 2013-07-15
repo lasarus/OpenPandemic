@@ -256,6 +256,7 @@ void load_landmass(landmass_t * landmass, FILE * file)
 					    sizeof(country_t) * landmass->count);
 	      landmass->countries[landmass->count - 1].count = 0;
 	      landmass->countries[landmass->count - 1].triangles = NULL;
+	      landmass->countries[landmass->count - 1].selectable = 1;
 	    }
 	  else if(token == TOKEN_RBRACKET)
 	    {
@@ -309,6 +310,14 @@ void load_landmass(landmass_t * landmass, FILE * file)
 		  c_r = r;
 		  c_g = g;
 		  c_b = b;
+		}
+	      else if(strcmp(str, "selectable") == 0)
+		{
+		  int ntoken = read_token(file);
+		  if(ntoken == TOKEN_FLOAT)
+		    {
+		      landmass->countries[current_country].selectable = (int)token_data.f;
+		    }
 		}
 	      free(str);
 	    }

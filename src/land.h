@@ -11,7 +11,8 @@ typedef struct country
 {
   char * name;
   int population;
-  
+  int selectable;
+
   int vbo_start;
 
   int count;

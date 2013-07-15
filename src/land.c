@@ -136,6 +136,8 @@ int selected_country(landmass_t * landmass, s_vertex_t mouse_s)
 
   for(i = 0; i < landmass->count; i++)
     {
+      if(!landmass->countries[i].selectable)
+	continue;
       for(j = 0; j < landmass->countries[i].count; j++)
 	{
 	  c_triangle_t triangle = landmass->countries[i].triangles[j];
