@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <SDL2/SDL_opengl.h>
@@ -11,6 +12,8 @@
 #include "land.h"
 #include "world_loader.h"
 #include "sphere.h"
+#include "font.h"
+#include "texture.h"
 
 #ifndef PI
 #define PI 3.14159265358979
@@ -26,6 +29,11 @@ SDL_Event event;
 
 float fov = 45.f;
 
+GLuint font;
+
+GLfloat projectionv[16];
+GLfloat orthov[16];
+
 int init_opengl()
 {
   glewInit();
@@ -38,8 +46,14 @@ int init_opengl()
   glClearColor(0, 0, 0, 1);
 
   glMatrixMode(GL_PROJECTION);
+
+  glLoadIdentity();
+  glOrtho(0, screen_width, screen_height, 0, -1, 1);
+  glGetFloatv(GL_PROJECTION_MATRIX, orthov);
+
   glLoadIdentity();
   gluPerspective(fov, (GLfloat)screen_width / (GLfloat)screen_height, 0.01f, 100.0f);
+  glGetFloatv(GL_PROJECTION_MATRIX, projectionv);
 
   glMatrixMode(GL_MODELVIEW);
 
@@ -57,12 +71,12 @@ int init()
   window = SDL_CreateWindow("OpenPandemic 0.x", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screen_width, screen_height, SDL_WINDOW_OPENGL);
 
   if(window == NULL)
-    return 0;
+    return 1;
 
   window_context = SDL_GL_CreateContext(window);
 
   if(init_opengl())
-    return 0;
+    return 1;
   
   return 0;
 }
@@ -91,6 +105,21 @@ double camera_dist(float fov_r /* radians */, double sphere_r /* sphere radius *
   return sin(PI / 2 - fov_r) / tan(fov_r) + cos(PI / 2 - fov_r);
 }
 
+void load_font_texture(const char * path)
+{
+  SDL_Surface * tmp = NULL;
+  tmp = load_surface(path);
+
+  if(tmp == NULL)
+    {
+      return;
+    }
+
+  glGenTextures(1, &font);
+  load_texture(tmp, font);
+  SDL_FreeSurface(tmp);
+}
+
 int main(int argc, char ** argv)
 {
   landmass_t landmass;
@@ -102,6 +131,9 @@ int main(int argc, char ** argv)
   int wireframe = 0;
   int last_selected = -1;
 
+  font_buffer_t tooltip;
+  int tooltip_activated = 0;
+
   if(init())
     return 1;
 
@@ -111,6 +143,11 @@ int main(int argc, char ** argv)
   load_world("world.opw", &landmass);
 
   srand(time(NULL));
+
+  load_font_texture("font.png");
+
+  tooltip = generate_font_buffer_vbo(font, "Hello World!");
+  glBindTexture(GL_TEXTURE_2D, 0);
 
   while(!quit)
     {
@@ -156,13 +193,18 @@ int main(int argc, char ** argv)
 	  if(selected != last_selected)
 	    {
 	      if(last_selected != -1)
-		update_country(&landmass, last_selected, 1, 1, 1, 0);
+		{
+		  update_country(&landmass, last_selected, 1, 1, 1, 0);
+		}
 	      update_country(&landmass, selected, 1, .5, .5, 0.01);
+	      tooltip_activated = 1;
+	      tooltip = generate_font_buffer(font, tooltip.buffer, landmass.countries[selected].name);
 	    }
 	}
       else if(last_selected != -1)
 	{
 	  update_country(&landmass, last_selected, 1, 1, 1, 0);
+	  tooltip_activated = 0;
 	}
       last_selected = selected;
 
@@ -199,6 +241,10 @@ int main(int argc, char ** argv)
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+      glMatrixMode(GL_PROJECTION);
+      glLoadMatrixf(projectionv);
+      glMatrixMode(GL_MODELVIEW);
+
       glLoadIdentity();
 
       gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
@@ -215,26 +261,38 @@ int main(int argc, char ** argv)
       glColor3f(0, 1, 0);
       draw_landmass(&landmass);
 
+      /* draw UI */
 
-      /* draw cursor */
+      glMatrixMode(GL_PROJECTION);
+      glLoadMatrixf(orthov);
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+
       glPushMatrix();
-      glColor3f(1, 0, 0);
-      
-      glRotatef(-mouse_s.sector * 180., 0, 0, 1);
-      glRotatef(-mouse_s.ring * 90., 0, 1, 0);
-      glTranslatef(1.02, 0, 0);
+      glTranslatef(mouse_x, mouse_y, 0);
 
-      glBegin(GL_TRIANGLES);
-      
-      glVertex3f(0, 0, -0.01);
-      glVertex3f(0, -0.009, 0.01);
-      glVertex3f(0, 0.009, 0.01);
-
+      glBegin(GL_QUADS);
+      glVertex3f(-2, -2, 0);
+      glVertex3f(2, -2, 0);
+      glVertex3f(2, 2, 0);
+      glVertex3f(-2, 2, 0);
       glEnd();
-
       glPopMatrix();
 
-      /* */
+      if(tooltip_activated)
+	{
+	  glTranslatef(mouse_x, mouse_y, 0);
+	  glScalef(16, 16, 1);
+	  glColor3f(0, 0, 0);
+
+	  glTranslatef(1 / 8., 1 / 8., 0);
+	  draw_font_buffer(&tooltip);
+
+	  glTranslatef(-1 / 8., -1 / 8., .1);
+	  glColor3f(1, 1, 1);
+	  draw_font_buffer(&tooltip);
+	}
+
       SDL_GL_SwapWindow(window);
     }
 

@@ -10,6 +10,18 @@ typedef struct vertex
   float x, y, z;
 } vertex_t;
 
+typedef struct color
+{
+  float r, g, b;
+} color_t;
+
+typedef struct tex_coord
+{
+  float x, y;
+} tex_coord_t;
+
+typedef struct vertex vector_t;
+
 typedef struct triangle
 {
   vertex_t v[3];

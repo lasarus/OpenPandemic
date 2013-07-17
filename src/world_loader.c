@@ -292,7 +292,6 @@ void load_landmass(landmass_t * landmass, FILE * file)
 		  if(ntoken == TOKEN_STRING)
 		    {
 		      landmass->countries[current_country].name = token_data.str;
-		      printf("Name: %s\n", token_data.str);
 		    }
 		}
 	      else if(strcmp(str, "population") == 0)
@@ -301,7 +300,6 @@ void load_landmass(landmass_t * landmass, FILE * file)
 		  if(ntoken == TOKEN_FLOAT)
 		    {
 		      landmass->countries[current_country].population = (int)token_data.f;
-		      printf("Population: %i\n", (int)token_data.f);
 		    }
 		}
 	      else if(strcmp(str, "color") == 0)
