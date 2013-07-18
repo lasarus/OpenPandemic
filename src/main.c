@@ -129,6 +129,7 @@ int main(int argc, char ** argv)
   double camera_speed = 1;
   int mouse_x, mouse_y;
   s_vertex_t mouse_s;
+  int mouse_outside;
   int wireframe = 0;
   int last_selected = -1;
 
@@ -190,7 +191,7 @@ int main(int argc, char ** argv)
 
       update_time(&ntime, &ltime, &dtime);
 
-      if(ntime - fps_starttick > 500)
+      if(ntime - fps_starttick >= 500)
 	{
 	  char buffer[256];
 	  fps = (frame - fps_start_frame) / (float)((ntime - fps_starttick) / 1000.);
@@ -209,9 +210,9 @@ int main(int argc, char ** argv)
       cameraLookAt = new_vertex(0, 0, 0);
       cameraUp = new_vertex(0, 0, 1);
       sphere.r = 1.05;
-      mouse_s = s_vertex_from_screen(&sphere, mouse_x, mouse_y, cameraLookAt, cameraPosition, cameraUp, fov, 0.1);
+      mouse_s = s_vertex_from_screen(&sphere, mouse_x, mouse_y, cameraLookAt, cameraPosition, cameraUp, fov, 0.1, &mouse_outside);
 
-      if((selected = selected_country(&landmass, mouse_s)) > -1)
+      if((selected = selected_country(&landmass, mouse_s)) > -1 && !mouse_outside)
 	{
 	  if(selected != last_selected)
 	    {

@@ -138,7 +138,7 @@ int line_sphere_intersection(sphere_t * sphere, vertex_t pos, vertex_t dir, vert
   return 0;
 }
 
-s_vertex_t s_vertex_from_screen(sphere_t * sphere, int mouse_x, int mouse_y, vertex_t cameraLookAt, vertex_t cameraPosition, vertex_t cameraUp, float fovy, float near_clipping)
+s_vertex_t s_vertex_from_screen(sphere_t * sphere, int mouse_x, int mouse_y, vertex_t cameraLookAt, vertex_t cameraPosition, vertex_t cameraUp, float fovy, float near_clipping, int * outside)
 {
   s_vertex_t result;
   vertex_t dir, pos;
@@ -147,7 +147,12 @@ s_vertex_t s_vertex_from_screen(sphere_t * sphere, int mouse_x, int mouse_y, ver
   pick_ray(mouse_x, mouse_y, cameraLookAt, cameraPosition, cameraUp, fovy, near_clipping, &pos, &dir);
 
   /* SPHERE LINE INTERSECTION */
-  line_sphere_intersection(sphere, pos, dir, &relative_vector);
+  if(line_sphere_intersection(sphere, pos, dir, &relative_vector))
+    {
+      *outside = 1;
+      return result; /* not usable */
+    }
+  *outside = 0;
 
   /* SPHERE COORS FROM RELATIVE VECTOR */
 
