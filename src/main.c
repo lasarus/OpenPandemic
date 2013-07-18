@@ -190,7 +190,7 @@ int main(int argc, char ** argv)
 				  sin(vangl) * dist);
       cameraLookAt = new_vertex(0, 0, 0);
       cameraUp = new_vertex(0, 0, 1);
-      sphere.r = 1.02;
+      sphere.r = 1.05;
       mouse_s = s_vertex_from_screen(&sphere, mouse_x, mouse_y, cameraLookAt, cameraPosition, cameraUp, fov, 0.1);
 
       if((selected = selected_country(&landmass, mouse_s)) > -1)
