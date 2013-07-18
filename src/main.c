@@ -131,8 +131,12 @@ int main(int argc, char ** argv)
   int wireframe = 0;
   int last_selected = -1;
 
+  Uint32 fps_starttick, fps_start_frame = 0, frame = 0;
+  float fps = 0;
+
   font_buffer_t tooltip;
   int tooltip_activated = 0;
+  font_buffer_t fps_fb;
 
   if(init())
     return 1;
@@ -151,8 +155,11 @@ int main(int argc, char ** argv)
   load_font_texture(DATADIR "/font.png");
   printf("done!\n");
   
-  tooltip = generate_font_buffer_vbo(font, "Hello World!");
+  tooltip = generate_font_buffer_vbo(font, "");
+  fps_fb = generate_font_buffer_vbo(font, "fps: 0");
   glBindTexture(GL_TEXTURE_2D, 0);
+
+  fps_starttick = SDL_GetTicks();
 
   while(!quit)
     {
@@ -181,6 +188,16 @@ int main(int argc, char ** argv)
 	}
 
       update_time(&ntime, &ltime, &dtime);
+
+      if(ntime - fps_starttick > 500)
+	{
+	  char buffer[256];
+	  fps = (frame - fps_start_frame) / (float)((ntime - fps_starttick) / 1000.);
+	  sprintf(buffer, "fps: %f", fps);
+	  fps_start_frame = frame;
+	  fps_starttick = ntime;
+	  fps_fb = generate_font_buffer(font, fps_fb.buffer, buffer);
+	}
 
       keystate = SDL_GetKeyboardState(NULL);
       SDL_GetMouseState(&mouse_x, &mouse_y);
@@ -283,11 +300,12 @@ int main(int argc, char ** argv)
       glVertex3f(-2, 2, 0);
       glEnd();
       glPopMatrix();
+      glScalef(16, 16, 1);
 
       if(tooltip_activated)
 	{
-	  glTranslatef(mouse_x, mouse_y, 0);
-	  glScalef(16, 16, 1);
+	  glPushMatrix();
+	  glTranslatef(mouse_x / 16., mouse_y / 16., 0);
 	  glColor3f(0, 0, 0);
 
 	  glTranslatef(1 / 8., 1 / 8., 0);
@@ -296,9 +314,20 @@ int main(int argc, char ** argv)
 	  glTranslatef(-1 / 8., -1 / 8., .1);
 	  glColor3f(1, 1, 1);
 	  draw_font_buffer(&tooltip);
+	  glPopMatrix();
 	}
+      glColor3f(0, 0, 0);
+
+      glTranslatef(1 / 8., 1 / 8., 0);
+      draw_font_buffer(&fps_fb);
+
+      glTranslatef(-1 / 8., -1 / 8., .1);
+      glColor3f(1, 1, 1);
+      draw_font_buffer(&fps_fb);
 
       SDL_GL_SwapWindow(window);
+
+      frame++;
     }
 
   SDL_DestroyWindow(window);
