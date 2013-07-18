@@ -195,7 +195,7 @@ int main(int argc, char ** argv)
 	{
 	  char buffer[256];
 	  fps = (frame - fps_start_frame) / (float)((ntime - fps_starttick) / 1000.);
-	  sprintf(buffer, "fps: %f", fps);
+	  sprintf(buffer, "fps: %.1f", fps);
 	  fps_start_frame = frame;
 	  fps_starttick = ntime;
 	  fps_fb = generate_font_buffer(font, fps_fb.buffer, buffer);
