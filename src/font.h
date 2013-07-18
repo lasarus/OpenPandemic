@@ -4,7 +4,6 @@
 typedef struct font_buffer
 {
   GLuint texture, buffer;
-  char * str;
   int len;
 } font_buffer_t;
 

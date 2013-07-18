@@ -21,7 +21,6 @@ font_buffer_t generate_font_buffer(GLuint texture, GLuint buffer, char * str)
   font_buffer_t font_buffer;
 
   font_buffer.len = strlen(str);
-  font_buffer.str = str;
   font_buffer.buffer = buffer;
   font_buffer.texture = texture;
 
