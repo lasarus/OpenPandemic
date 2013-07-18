@@ -126,6 +126,7 @@ int main(int argc, char ** argv)
   sphere_t sphere;
   Uint32 ntime, ltime = 0, dtime;
   double vangl = 0, hangl = 0, dist = 4;
+  double camera_speed = 1;
   int mouse_x, mouse_y;
   s_vertex_t mouse_s;
   int wireframe = 0;
@@ -230,33 +231,39 @@ int main(int argc, char ** argv)
 	}
       last_selected = selected;
 
+      camera_speed = 1;
+      if(keystate[SDL_GetScancodeFromKey(SDLK_LCTRL)])
+	{
+	  camera_speed = 0.2;
+	}
+      
       if(keystate[SDL_GetScancodeFromKey(SDLK_w)])
 	{
-	  vangl += 0.001 * dtime * sqrt(dist - 1.08);
+	  vangl += 0.001 * dtime * sqrt(dist - 1.08) * camera_speed;
 
 	  if(vangl > PI / 2 - FLT_MIN)
 	    vangl = PI / 2 - FLT_MIN;
 	}
       else if(keystate[SDL_GetScancodeFromKey(SDLK_s)])
 	{
-	  vangl -= 0.001 * dtime * sqrt(dist - 1.08);
+	  vangl -= 0.001 * dtime * sqrt(dist - 1.08) * camera_speed;
 
 	  if(vangl < -PI / 2 + FLT_MIN)
 	    vangl = -PI / 2 + FLT_MIN;
 	}
       if(keystate[SDL_GetScancodeFromKey(SDLK_a)])
-	hangl += 0.001 * dtime * sqrt(dist - 1.08);
+	hangl += 0.001 * dtime * sqrt(dist - 1.08) * camera_speed;
       else if(keystate[SDL_GetScancodeFromKey(SDLK_d)])
-	hangl -= 0.001 * dtime * sqrt(dist - 1.08);
+	hangl -= 0.001 * dtime * sqrt(dist - 1.08) * camera_speed;
       if(keystate[SDL_GetScancodeFromKey(SDLK_q)])
 	{
-	  dist -= (dist - 1.08) / 400 * dtime;
-	  if(dist < 1.1)
-	    dist = 1.1;
+	  dist -= (dist - 1.08) / 400 * dtime * camera_speed;
+	  if(dist < 1.4)
+	    dist = 1.4;
 	}
       else if(keystate[SDL_GetScancodeFromKey(SDLK_e)])
 	{
-	  dist += (dist - 1) / 400 * dtime;
+	  dist += (dist - 1) / 400 * dtime * camera_speed;
 	  if(dist > 6)
 	    dist = 6;
 	}
