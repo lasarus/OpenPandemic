@@ -14,6 +14,7 @@
 #include "sphere.h"
 #include "font.h"
 #include "texture.h"
+#include "disease.h"
 
 #ifndef PI
 #define PI 3.14159265358979
@@ -124,6 +125,7 @@ int main(int argc, char ** argv)
 {
   landmass_t landmass;
   sphere_t sphere;
+  disease_simulation_t simulation;
   Uint32 ntime, ltime = 0, dtime;
   double vangl = 0, hangl = 0, dist = 4;
   double camera_speed = 1;
@@ -133,6 +135,7 @@ int main(int argc, char ** argv)
   int wireframe = 0;
   int last_selected = -1;
 
+  Uint32 last_step = 0;
   Uint32 fps_starttick, fps_start_frame = 0, frame = 0;
   float fps = 0;
 
@@ -161,7 +164,9 @@ int main(int argc, char ** argv)
   fps_fb = generate_font_buffer_vbo(font, "fps: 0");
   glBindTexture(GL_TEXTURE_2D, 0);
 
-  fps_starttick = SDL_GetTicks();
+  init_disease_simulation(&simulation, new_disease(DISEASE_VIRUS));
+
+  last_step = fps_starttick = SDL_GetTicks();
 
   while(!quit)
     {
@@ -199,6 +204,13 @@ int main(int argc, char ** argv)
 	  fps_start_frame = frame;
 	  fps_starttick = ntime;
 	  fps_fb = generate_font_buffer(font, fps_fb.buffer, buffer);
+	}
+      if(ntime - last_step >= 20)
+	{
+	  Uint32 delta = ntime - last_step;
+	  last_step = ntime - (delta - 20);
+
+	  simulate_step(&simulation, &landmass);
 	}
 
       keystate = SDL_GetKeyboardState(NULL);
