@@ -140,12 +140,17 @@ int main(int argc, char ** argv)
   init_sphere(&sphere, 10, 20, 1);
 
   dist = camera_dist(fov / 180. * PI, 1.2);
-  load_world("world.opw", &landmass);
+
+  printf("loading %s ...\n", DATADIR "/world.opw");
+  load_world(DATADIR "/world.opw", &landmass);
+  printf("done!\n");
 
   srand(time(NULL));
 
-  load_font_texture("font.png");
-
+  printf("loading %s ...\n", DATADIR "/font.png");
+  load_font_texture(DATADIR "/font.png");
+  printf("done!\n");
+  
   tooltip = generate_font_buffer_vbo(font, "Hello World!");
   glBindTexture(GL_TEXTURE_2D, 0);
 

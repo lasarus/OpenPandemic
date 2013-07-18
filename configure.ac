@@ -1,0 +1,15 @@
+AC_INIT([openpandemic], [0.1])
+AM_INIT_AUTOMAKE([1.11 foreign subdir-objects -Wall -Werror])
+AC_CONFIG_SRCDIR([configure.ac])
+AC_CONFIG_HEADERS([config.h])
+AC_PROG_CC
+AC_CONFIG_FILES([Makefile])
+
+PKG_CHECK_MODULES(GLU, glu)
+PKG_CHECK_MODULES(GL, gl)
+PKG_CHECK_MODULES(GLEW, glew)
+PKG_CHECK_MODULES(SDL2, sdl2)
+PKG_CHECK_MODULES(SDL2_IMAGE, SDL2_image)
+
+AM_PROG_CC_C_O
+AC_OUTPUT
