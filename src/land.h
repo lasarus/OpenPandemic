@@ -17,6 +17,8 @@ typedef struct country
 
   int vbo_start;
 
+  int ill_population, dead_population;
+
   int count;
   c_triangle_t * triangles;
 } country_t;

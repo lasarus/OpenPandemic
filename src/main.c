@@ -121,6 +121,17 @@ void load_font_texture(const char * path)
   SDL_FreeSurface(tmp);
 }
 
+void draw_font_shadow(font_buffer_t * font_buffer)
+{
+  glColor3f(0, 0, 0);
+  glTranslatef(1 / 8., 1 / 8., 0);
+  draw_font_buffer(font_buffer);
+
+  glTranslatef(-1 / 8., -1 / 8., .1);
+  glColor3f(1, 1, 1);
+  draw_font_buffer(font_buffer);
+}
+
 int main(int argc, char ** argv)
 {
   landmass_t landmass;
@@ -141,7 +152,7 @@ int main(int argc, char ** argv)
 
   font_buffer_t tooltip;
   int tooltip_activated = 0;
-  font_buffer_t fps_fb;
+  font_buffer_t fps_fb, date_fb;
 
   if(init())
     return 1;
@@ -162,6 +173,7 @@ int main(int argc, char ** argv)
   
   tooltip = generate_font_buffer_vbo(font, "");
   fps_fb = generate_font_buffer_vbo(font, "fps: 0");
+  date_fb = generate_font_buffer_vbo(font, "1 January 2001 00:00");
   glBindTexture(GL_TEXTURE_2D, 0);
 
   init_disease_simulation(&simulation, new_disease(DISEASE_VIRUS));
@@ -205,12 +217,16 @@ int main(int argc, char ** argv)
 	  fps_starttick = ntime;
 	  fps_fb = generate_font_buffer(font, fps_fb.buffer, buffer);
 	}
-      if(ntime - last_step >= 20)
+      if(ntime - last_step >= 10)
 	{
+	  char buffer[256];
 	  Uint32 delta = ntime - last_step;
-	  last_step = ntime - (delta - 20);
+	  last_step = ntime - (delta - 10);
 
 	  simulate_step(&simulation, &landmass);
+
+	  simulation_get_time_string(&simulation, buffer);
+	  date_fb = generate_font_buffer(font, date_fb.buffer, buffer);
 	}
 
       keystate = SDL_GetKeyboardState(NULL);
@@ -320,11 +336,11 @@ int main(int argc, char ** argv)
       glVertex3f(-2, 2, 0);
       glEnd();
       glPopMatrix();
-      glScalef(16, 16, 1);
 
       if(tooltip_activated)
 	{
 	  glPushMatrix();
+	  glScalef(16, 16, 1);
 	  glTranslatef(mouse_x / 16., mouse_y / 16., 0);
 	  glColor3f(0, 0, 0);
 
@@ -336,14 +352,17 @@ int main(int argc, char ** argv)
 	  draw_font_buffer(&tooltip);
 	  glPopMatrix();
 	}
-      glColor3f(0, 0, 0);
 
-      glTranslatef(1 / 8., 1 / 8., 0);
-      draw_font_buffer(&fps_fb);
+      glPushMatrix();
+      glScalef(16, 16, 1);
+      draw_font_shadow(&fps_fb);
+      glPopMatrix();
 
-      glTranslatef(-1 / 8., -1 / 8., .1);
-      glColor3f(1, 1, 1);
-      draw_font_buffer(&fps_fb);
+      glPushMatrix();
+      glScalef(16, 16, 1);
+      glTranslatef(screen_width / 16. - (date_fb.len), screen_height / 16. - 1, 0);
+      draw_font_shadow(&date_fb);
+      glPopMatrix();
 
       SDL_GL_SwapWindow(window);
 
