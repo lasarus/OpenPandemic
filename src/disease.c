@@ -3,6 +3,7 @@
 #include <SDL2/SDL_opengl.h>
 
 #include "vertex.h"
+#include "mapping.h"
 #include "land.h"
 #include "disease.h"
 

@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "vertex.h"
+#include "mapping.h"
 #include "land.h"
 
 enum

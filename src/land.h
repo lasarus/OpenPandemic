@@ -29,10 +29,10 @@ typedef struct landmass
   country_t * countries;
 } landmass_t;
 
-void init_landmass(landmass_t * landmass);
+void init_landmass(landmass_t * landmass, mapper_t mapper);
 void draw_landmass(landmass_t * landmass);
 
-void update_country(landmass_t * landmass, int i, float r, float g, float b, double h);
+void update_country(landmass_t * landmass, int i, float r, float g, float b, double h, mapper_t mapper);
 
 int selected_country(landmass_t * landmass, s_vertex_t mouse_s);
 

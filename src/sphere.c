@@ -3,63 +3,60 @@
 #include <SDL2/SDL_opengl.h>
 
 #include "vertex.h"
+#include "mapping.h"
 #include "sphere.h"
+#include "mapping.h"
 
 extern int screen_height, screen_width;
 
-void init_sphere(sphere_t * sphere, int rings, int sectors, double r)
+void reinit_sphere(sphere_t * sphere, mapper_t mapper)
 {
   vertex_t * sphere_data;
+  mapper_func_t mapper_func = mapper.mapper_func;
   int i, j;
 
-  sphere_data = malloc(sizeof(vertex_t) * rings
-		  * sectors * 4);
-
-  sphere->rings = rings;
-  sphere->sectors = sectors;
-  sphere->r = r;
-
-  for(i = 0; i < sectors; i++)
+  sphere_data = malloc(sizeof(vertex_t) * sphere->rings
+		  * sphere->sectors * 4);
+  
+  for(i = 0; i < sphere->sectors; i++)
     {
-      double sector_angl, prev_sector_angl;
+      double sector, prev_sector;
 
-      sector_angl = (i / (double)sectors) * PI * 2;
-      prev_sector_angl = ((i - 1) / (double)sectors) * PI * 2;
-      for(j = 1; j < rings + 1; j++)
+      sector = (i / (double)sphere->sectors) * 2 - 1;
+      prev_sector = ((i - 1) / (double)sphere->sectors) * 2 - 1;
+      for(j = 1; j < sphere->rings + 1; j++)
 	{
-	  double ring_angl, prev_ring_angl;
-	  int base_index = ((j - 1) + i * rings) * 4;
+	  double ring, prev_ring;
+	  int base_index = ((j - 1) + i * sphere->rings) * 4;
 
-	  ring_angl = (j / (double)rings - 0.5) * PI;
-	  prev_ring_angl = ((j - 1) / (double)rings - 0.5) * PI;
+	  ring = (j / (double)sphere->rings - 0.5) * 2;
+	  prev_ring = ((j - 1) / (double)sphere->rings - 0.5) * 2;
 
-	  sphere_data[base_index + 0].x = cos(prev_sector_angl) * cos(prev_ring_angl);
-	  sphere_data[base_index + 0].y = -sin(prev_sector_angl) * cos(prev_ring_angl);
-	  sphere_data[base_index + 0].z = sin(prev_ring_angl);
-
-	  sphere_data[base_index + 1].x = cos(prev_sector_angl) * cos(ring_angl);
-	  sphere_data[base_index + 1].y = -sin(prev_sector_angl) * cos(ring_angl);
-	  sphere_data[base_index + 1].z = sin(ring_angl);
-
-	  sphere_data[base_index + 2].x = cos(sector_angl) * cos(ring_angl);
-	  sphere_data[base_index + 2].y = -sin(sector_angl) * cos(ring_angl);
-	  sphere_data[base_index + 2].z = sin(ring_angl);
-
-	  sphere_data[base_index + 3].x = cos(sector_angl) * cos(prev_ring_angl);
-	  sphere_data[base_index + 3].y = -sin(sector_angl) * cos(prev_ring_angl);
-	  sphere_data[base_index + 3].z = sin(prev_ring_angl);
+	  sphere_data[base_index + 0] = (*mapper_func)(prev_sector, prev_ring, 1);
+	  sphere_data[base_index + 1] = (*mapper_func)(prev_sector, ring, 1);
+	  sphere_data[base_index + 2] = (*mapper_func)(sector, ring, 1);
+	  sphere_data[base_index + 3] = (*mapper_func)(sector, prev_ring, 1);
 	}
     }
 
-  glGenBuffers(1, &sphere->buffer);
-
   glBindBuffer(GL_ARRAY_BUFFER, sphere->buffer);
   glBufferData(GL_ARRAY_BUFFER,
-	       sizeof(vertex_t) * rings * sectors * 4,
+	       sizeof(vertex_t) * sphere->rings * sphere->sectors * 4,
 	       sphere_data, GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   free(sphere_data);
+}
+
+void init_sphere(sphere_t * sphere, int rings, int sectors, double r, mapper_t mapper)
+{
+  sphere->rings = rings;
+  sphere->sectors = sectors;
+  sphere->r = r;
+
+  glGenBuffers(1, &sphere->buffer);
+
+  reinit_sphere(sphere, mapper);
 }
 
 void draw_sphere(sphere_t * sphere)
@@ -138,28 +135,21 @@ int line_sphere_intersection(sphere_t * sphere, vertex_t pos, vertex_t dir, vert
   return 0;
 }
 
-s_vertex_t s_vertex_from_screen(sphere_t * sphere, int mouse_x, int mouse_y, vertex_t cameraLookAt, vertex_t cameraPosition, vertex_t cameraUp, float fovy, float near_clipping, int * outside)
+s_vertex_t s_vertex_from_screen(int mouse_x, int mouse_y, vertex_t cameraLookAt, vertex_t cameraPosition, vertex_t cameraUp, float fovy, float near_clipping, int * outside, mapper_t mapper)
 {
   s_vertex_t result;
   vertex_t dir, pos;
-  vertex_t relative_vector;
+  mapper_intersection_func_t mapper_intersection_func = mapper.mapper_intersection_func;
 
   pick_ray(mouse_x, mouse_y, cameraLookAt, cameraPosition, cameraUp, fovy, near_clipping, &pos, &dir);
 
   /* SPHERE LINE INTERSECTION */
-  if(line_sphere_intersection(sphere, pos, dir, &relative_vector))
+  if((*mapper_intersection_func)(pos, dir, &result))
     {
       *outside = 1;
       return result; /* not usable */
     }
+
   *outside = 0;
-
-  /* SPHERE COORS FROM RELATIVE VECTOR */
-
-  result.sector = (atan2(-relative_vector.y, relative_vector.x) / PI);
-  result.ring = -(atan2(-relative_vector.z,
-		       sqrt(relative_vector.y * relative_vector.y +
-			    relative_vector.x * relative_vector.x)) / (PI / 2));
-
   return result;
 }

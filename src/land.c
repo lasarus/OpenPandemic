@@ -3,6 +3,7 @@
 #include <SDL2/SDL_opengl.h>
 
 #include "vertex.h"
+#include "mapping.h"
 #include "land.h"
 
 GLuint landmass_buffer;
@@ -22,7 +23,32 @@ typedef struct land_data
   vertex_t c2;
 } land_data_t;
 
-static void init_landmass_buffer(landmass_t * landmass)
+static void update_country_buffer(country_t country, land_data_t * triangles, int * c,
+				  float r, float g, float b, double h, mapper_t mapper)
+{
+  int i;
+  mapper_func_t mapper_func = mapper.mapper_func;
+
+  for(i = 0; i < country.count; i++)
+    {
+      s_vertex_t s_v[3];
+      s_v[0] = country.triangles[i].v[0];
+      s_v[1] = country.triangles[i].v[1];
+      s_v[2] = country.triangles[i].v[2];
+
+      triangles[*c].v0 = (*mapper_func)(s_v[0].sector, s_v[0].ring, landmass_radius + h);
+      triangles[*c].v1 = (*mapper_func)(s_v[1].sector, s_v[1].ring, landmass_radius + h);
+      triangles[*c].v2 = (*mapper_func)(s_v[2].sector, s_v[2].ring, landmass_radius + h);
+
+      triangles[*c].c0.x = triangles[*c].c1.x = triangles[*c].c2.x = country.triangles[i].color.x * r;
+      triangles[*c].c0.y = triangles[*c].c1.y = triangles[*c].c2.y = country.triangles[i].color.y * g;
+      triangles[*c].c0.z = triangles[*c].c1.z = triangles[*c].c2.z = country.triangles[i].color.z * b;
+      
+      (*c)++;
+    }
+}
+
+static void init_landmass_buffer(landmass_t * landmass, mapper_t mapper)
 {
   int i, j, triangle_count = 0, c;
   land_data_t * triangles;
@@ -38,20 +64,7 @@ static void init_landmass_buffer(landmass_t * landmass)
   for(i = 0; i < landmass->count; i++)
     {
       landmass->countries[i].vbo_start = c * sizeof(land_data_t);
-      for(j = 0; j < landmass->countries[i].count; j++)
-	{
-	  s_vertex_t s_v[3];
-	  s_v[0] = landmass->countries[i].triangles[j].v[0];
-	  s_v[1] = landmass->countries[i].triangles[j].v[1];
-	  s_v[2] = landmass->countries[i].triangles[j].v[2];
-	  
-	  triangles[c].v0 = spherical_coord(s_v[0], landmass_radius);
-	  triangles[c].v1 = spherical_coord(s_v[1], landmass_radius);
-	  triangles[c].v2 = spherical_coord(s_v[2], landmass_radius);
-	  triangles[c].c0 = triangles[c].c1 = triangles[c].c2 =
-	    landmass->countries[i].triangles[j].color;
-	  c++;
-	}
+      update_country_buffer(landmass->countries[i], triangles, &c, 1, 1, 1, 0, mapper);
     }
 
   glGenBuffers(1, &landmass_buffer);
@@ -63,31 +76,20 @@ static void init_landmass_buffer(landmass_t * landmass)
   landmass_count = triangle_count * 3;
 }
 
-void update_country(landmass_t * landmass, int i, float r, float g, float b, double h)
+void update_country(landmass_t * landmass, int i,
+		    float r, float g, float b, double h, mapper_t mapper)
 {
   land_data_t * triangles;
   country_t * country;
-  int j;
+  int j, c;
 
   country = &landmass->countries[i];
 
   triangles = malloc(sizeof(land_data_t) * country->count);
-  
-  for(j = 0; j < landmass->countries[i].count; j++)
-    {
-      s_vertex_t s_v[3];
-      s_v[0] = landmass->countries[i].triangles[j].v[0];
-      s_v[1] = landmass->countries[i].triangles[j].v[1];
-      s_v[2] = landmass->countries[i].triangles[j].v[2];
-	  
-      triangles[j].v0 = spherical_coord(s_v[0], landmass_radius + h);
-      triangles[j].v1 = spherical_coord(s_v[1], landmass_radius + h);
-      triangles[j].v2 = spherical_coord(s_v[2], landmass_radius + h);
-      triangles[j].c0.x = triangles[j].c1.x = triangles[j].c2.x = landmass->countries[i].triangles[j].color.x * r;
-      triangles[j].c0.y = triangles[j].c1.y = triangles[j].c2.y = landmass->countries[i].triangles[j].color.y * g;
-      triangles[j].c0.z = triangles[j].c1.z = triangles[j].c2.z = landmass->countries[i].triangles[j].color.z * b;
-    }
 
+  c = 0;
+  update_country_buffer(*country, triangles, &c, r, g, b, h, mapper);
+  
   glBindBuffer(GL_ARRAY_BUFFER, landmass_buffer);
   glBufferSubData(GL_ARRAY_BUFFER, country->vbo_start, sizeof(land_data_t) * country->count, triangles);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -95,9 +97,9 @@ void update_country(landmass_t * landmass, int i, float r, float g, float b, dou
   free(triangles);
 }
 
-void init_landmass(landmass_t * landmass)
+void init_landmass(landmass_t * landmass, mapper_t mapper)
 {
-  init_landmass_buffer(landmass);
+  init_landmass_buffer(landmass, mapper);
 }
 
 void draw_landmass(landmass_t * landmass)

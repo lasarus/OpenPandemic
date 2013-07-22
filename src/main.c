@@ -9,6 +9,7 @@
 #include <float.h>
 
 #include "vertex.h"
+#include "mapping.h"
 #include "land.h"
 #include "world_loader.h"
 #include "sphere.h"
@@ -95,7 +96,6 @@ void load_world(const char * filename, landmass_t * landmass)
   fp = fopen(filename, "r");
 
   load_landmass(landmass, fp);
-  init_landmass(landmass);
 
   fclose(fp);
 }
@@ -132,6 +132,18 @@ void draw_font_shadow(font_buffer_t * font_buffer)
   draw_font_buffer(font_buffer);
 }
 
+void reinit_geomety(landmass_t * landmass, sphere_t * sphere, mapper_t mapper)
+{
+  int i;
+
+  reinit_sphere(sphere, mapper);
+
+  for(i = 0; i < landmass->count; i++)
+    {
+      update_country(landmass, i, 1, 1, 1, 0, mapper);
+    }
+}
+
 int main(int argc, char ** argv)
 {
   landmass_t landmass;
@@ -154,16 +166,28 @@ int main(int argc, char ** argv)
   int tooltip_activated = 0;
   font_buffer_t fps_fb, date_fb;
 
+  mapper_t mapper;
+  mapper_t sphere_mapper, plane_mapper;
+
   if(init())
     return 1;
 
-  init_sphere(&sphere, 10, 20, 1);
+  sphere_mapper.mapper_func = &map_sphere;
+  sphere_mapper.mapper_intersection_func = &map_intersection_sphere;
+
+  plane_mapper.mapper_func = &map_plane;
+  plane_mapper.mapper_intersection_func = &map_intersection_plane;
+
+  mapper = sphere_mapper;
+
+  init_sphere(&sphere, 10, 20, 1, mapper);
 
   dist = camera_dist(fov / 180. * PI, 1.2);
 
   printf("loading %s ...\n", DATADIR "/world.opw");
   load_world(DATADIR "/world.opw", &landmass);
   printf("done!\n");
+  init_landmass(&landmass, mapper);
 
   srand(time(NULL));
 
@@ -203,6 +227,16 @@ int main(int argc, char ** argv)
 		{
 		  wireframe = !wireframe;
 		}
+	      else if(key == SDLK_2)
+		{
+		  mapper = sphere_mapper;
+		  reinit_geomety(&landmass, &sphere, mapper);
+		}
+	      else if(key == SDLK_3)
+		{
+		  mapper = plane_mapper;
+		  reinit_geomety(&landmass, &sphere, mapper);
+		}
 	    }
 	}
 
@@ -238,7 +272,7 @@ int main(int argc, char ** argv)
       cameraLookAt = new_vertex(0, 0, 0);
       cameraUp = new_vertex(0, 0, 1);
       sphere.r = 1.05;
-      mouse_s = s_vertex_from_screen(&sphere, mouse_x, mouse_y, cameraLookAt, cameraPosition, cameraUp, fov, 0.1, &mouse_outside);
+      mouse_s = s_vertex_from_screen(mouse_x, mouse_y, cameraLookAt, cameraPosition, cameraUp, fov, 0.1, &mouse_outside, mapper);
 
       if((selected = selected_country(&landmass, mouse_s)) > -1 && !mouse_outside)
 	{
@@ -246,16 +280,16 @@ int main(int argc, char ** argv)
 	    {
 	      if(last_selected != -1)
 		{
-		  update_country(&landmass, last_selected, 1, 1, 1, 0);
+		  update_country(&landmass, last_selected, 1, 1, 1, 0, mapper);
 		}
-	      update_country(&landmass, selected, 1, .5, .5, 0.01);
+	      update_country(&landmass, selected, 1, .5, .5, 0.01, mapper);
 	      tooltip_activated = 1;
 	      tooltip = generate_font_buffer(font, tooltip.buffer, landmass.countries[selected].name);
 	    }
 	}
       else if(last_selected != -1)
 	{
-	  update_country(&landmass, last_selected, 1, 1, 1, 0);
+	  update_country(&landmass, last_selected, 1, 1, 1, 0, mapper);
 	  tooltip_activated = 0;
 	}
       last_selected = selected;
