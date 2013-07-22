@@ -172,11 +172,17 @@ int main(int argc, char ** argv)
   if(init())
     return 1;
 
+  map_init_sphere(&sphere_mapper);
   sphere_mapper.mapper_func = &map_sphere;
   sphere_mapper.mapper_intersection_func = &map_intersection_sphere;
+  sphere_mapper.mapper_camera_func = &map_camera_sphere;
+  sphere_mapper.mapper_get_camera_func = &map_get_camera_sphere;
 
+  map_init_plane(&plane_mapper);
   plane_mapper.mapper_func = &map_plane;
   plane_mapper.mapper_intersection_func = &map_intersection_plane;
+  plane_mapper.mapper_camera_func = &map_camera_plane;
+  plane_mapper.mapper_get_camera_func = &map_get_camera_plane;
 
   mapper = sphere_mapper;
 
@@ -266,12 +272,8 @@ int main(int argc, char ** argv)
       keystate = SDL_GetKeyboardState(NULL);
       SDL_GetMouseState(&mouse_x, &mouse_y);
 
-      cameraPosition = new_vertex(cos(hangl) * dist * cos(vangl),
-				  -sin(hangl) * dist * cos(vangl),
-				  sin(vangl) * dist);
-      cameraLookAt = new_vertex(0, 0, 0);
-      cameraUp = new_vertex(0, 0, 1);
-      sphere.r = 1.05;
+      (*mapper.mapper_get_camera_func)(&cameraPosition, &cameraUp, &cameraLookAt, mapper);
+
       mouse_s = s_vertex_from_screen(mouse_x, mouse_y, cameraLookAt, cameraPosition, cameraUp, fov, 0.1, &mouse_outside, mapper);
 
       if((selected = selected_country(&landmass, mouse_s)) > -1 && !mouse_outside)
@@ -300,36 +302,7 @@ int main(int argc, char ** argv)
 	  camera_speed = 0.2;
 	}
       
-      if(keystate[SDL_GetScancodeFromKey(SDLK_w)])
-	{
-	  vangl += 0.001 * dtime * sqrt(dist - 1.08) * camera_speed;
-
-	  if(vangl > PI / 2 - FLT_MIN)
-	    vangl = PI / 2 - FLT_MIN;
-	}
-      else if(keystate[SDL_GetScancodeFromKey(SDLK_s)])
-	{
-	  vangl -= 0.001 * dtime * sqrt(dist - 1.08) * camera_speed;
-
-	  if(vangl < -PI / 2 + FLT_MIN)
-	    vangl = -PI / 2 + FLT_MIN;
-	}
-      if(keystate[SDL_GetScancodeFromKey(SDLK_a)])
-	hangl += 0.001 * dtime * sqrt(dist - 1.08) * camera_speed;
-      else if(keystate[SDL_GetScancodeFromKey(SDLK_d)])
-	hangl -= 0.001 * dtime * sqrt(dist - 1.08) * camera_speed;
-      if(keystate[SDL_GetScancodeFromKey(SDLK_q)])
-	{
-	  dist -= (dist - 1.08) / 400 * dtime * camera_speed;
-	  if(dist < 1.4)
-	    dist = 1.4;
-	}
-      else if(keystate[SDL_GetScancodeFromKey(SDLK_e)])
-	{
-	  dist += (dist - 1) / 400 * dtime * camera_speed;
-	  if(dist > 6)
-	    dist = 6;
-	}
+      (*mapper.mapper_camera_func)(keystate, mapper, dtime, camera_speed);
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
