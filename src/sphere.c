@@ -22,8 +22,8 @@ void reinit_sphere(sphere_t * sphere, mapper_t mapper)
     {
       double sector, prev_sector;
 
-      sector = (i / (double)sphere->sectors) * 2 - 1;
-      prev_sector = ((i - 1) / (double)sphere->sectors) * 2 - 1;
+      sector = ((i + 1) / (double)sphere->sectors) * 2 - 1;
+      prev_sector = (i / (double)sphere->sectors) * 2 - 1;
       for(j = 1; j < sphere->rings + 1; j++)
 	{
 	  double ring, prev_ring;
